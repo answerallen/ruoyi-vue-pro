@@ -11,7 +11,7 @@ name: ruoyi-jdk25-build-push
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
   workflow_dispatch: {}          # 手动触发
 
 env:
