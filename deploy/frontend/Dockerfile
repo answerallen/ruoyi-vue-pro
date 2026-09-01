@@ -23,7 +23,7 @@ RUN if [ -f .env.prod ]; then \
 # --dangerously-allow-all-builds: 允许 esbuild/es5-ext 等 postinstall 脚本(已验证必需, 否则 ERR_PNPM_IGNORED_BUILDS)
 RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds || pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
 # 构建生产产物; prod mode 下产物目录为 dist-prod (vite.config: outDir=VITE_OUT_DIR||'dist', .env.prod 设 VITE_OUT_DIR=dist-prod)
-RUN pnpm build:prod && echo "=== dist-prod ===" && ls dist-prod/ && ls dist/ 2>/dev/null
+RUN pnpm build:prod && ls dist-prod/
 
 # ---- 运行 ----
 FROM nginx:1.27-alpine
