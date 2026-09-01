@@ -12,6 +12,7 @@ ARG API_BASE_URL=/admin-api
 RUN npm install -g pnpm@11.8.0
 # lockfile 的 tarball URL 指向 npmmirror，必须显式设 registry 否则 supply-chain 校验失败
 RUN pnpm config set registry https://registry.npmmirror.com
+# (strict-dep-builds 用内联 --config 传入，见下方 install 命令)
 # 复制完整前端源码
 COPY frontend/ ./
 # 覆盖 API 前缀(前端用 VITE_API_URL=/admin-api，与 nginx 反代一致)
@@ -19,7 +20,8 @@ RUN if [ -f .env.prod ]; then \
       sed -i "s|VITE_API_URL=.*|VITE_API_URL=${API_BASE_URL}|" .env.prod || true; \
     fi
 # 安装依赖：优先 frozen；lockfile 校验失败(版本差异)时退化为非 frozen 重新解析
-RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+#   --dangerously-allow-all-builds: 允许 esbuild/es5-ext 等 postinstall 脚本(否则 ERR_PNPM_IGNORED_BUILDS)
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds || pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
 RUN pnpm build:prod && ls -la dist/
 
 # ---- 运行 ----
