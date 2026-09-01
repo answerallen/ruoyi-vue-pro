@@ -59,8 +59,10 @@ services:
       REDIS_HOST: "172.18.29.129"
       REDIS_PORT: "6379"
       REDIS_PASSWORD: "nanzi_redis_2v9qX"
-      # JVM 限堆，适配 2G 生产机
-      JAVA_OPTS: "-Xms256m -Xmx768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
+      # 关闭登录验证码(relaxed binding: YDAO_CAPTCHA_ENABLE -> yudao.captcha.enable), 免重建即可生效
+      YDAO_CAPTCHA_ENABLE: "false"
+      # JVM 限堆，适配 2G 生产机；-Dyudao.captcha.enable=false 关闭登录验证码(JVM系统属性对@Value有效)
+      JAVA_OPTS: "-Xms256m -Xmx768m -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Dyudao.captcha.enable=false"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

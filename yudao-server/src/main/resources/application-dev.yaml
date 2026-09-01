@@ -183,6 +183,8 @@ wx: # 参见 https://github.com/Wechat-Group/WxJava/blob/develop/spring-boot-sta
 
 # 芋道配置项，设置当前项目所有自定义的配置
 yudao:
+  captcha:
+    enable: false # 关闭登录验证码，便于部署后 admin/admin123 直接登录（与 local 环境一致）
   pay:
     order-notify-url: http://yunai.natapp1.cc/admin-api/pay/notify/order # 支付渠道的【支付】回调地址
     refund-notify-url: http://yunai.natapp1.cc/admin-api/pay/notify/refund # 支付渠道的【退款】回调地址
