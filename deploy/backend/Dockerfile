@@ -24,11 +24,13 @@ RUN mvn -q clean install \
     -DskipTests -Dmaven.test.skip=true \
     -Dspotless.check.skip=true -Dmaven.javadoc.skip=true \
     -pl yudao-server -am && \
-    echo "=== built jar ===" && ls -la yudao-server/target/*.jar
+    echo "=== built jar ===" && ls -la yudao-server/target/*.jar && \
+    # 固定 jar 名（规避跨阶段 COPY 通配符不展开；fat jar 就是 repackage 后的那个）
+    cp yudao-server/target/yudao-server-*.jar /yudao-server.jar
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
-COPY --from=builder /build/yudao-server/target/yudao-server-*.jar /app/yudao-server.jar
+COPY --from=builder /yudao-server.jar /app/yudao-server.jar
 ENV JAVA_OPTS="-Xms256m -Xmx768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
 ENV SPRING_PROFILES_ACTIVE=dev
 EXPOSE 48080
