@@ -20,13 +20,14 @@ RUN if [ -f .env.prod ]; then \
       sed -i "s|VITE_API_URL=.*|VITE_API_URL=${API_BASE_URL}|" .env.prod || true; \
     fi
 # 安装依赖：优先 frozen；lockfile 校验失败(版本差异)时退化为非 frozen 重新解析
-#   --dangerously-allow-all-builds: 允许 esbuild/es5-ext 等 postinstall 脚本(否则 ERR_PNPM_IGNORED_BUILDS)
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds || pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
-RUN pnpm build:prod && ls -la dist/
+RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+# 构建生产产物; prod mode 下产物目录为 dist-prod (vite.config: outDir=VITE_OUT_DIR||'dist', .env.prod 设 VITE_OUT_DIR=dist-prod)
+RUN pnpm build:prod && echo "=== dist-prod ===" && ls dist-prod/ && ls dist/ 2>/dev/null
 
 # ---- 运行 ----
 FROM nginx:1.27-alpine
-COPY --from=builder /build/dist /usr/share/nginx/html
+# prod mode 产物在 dist-prod/，tolerant 拷贝两者之一
+COPY --from=builder /build/dist-prod /usr/share/nginx/html
 COPY deploy/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
