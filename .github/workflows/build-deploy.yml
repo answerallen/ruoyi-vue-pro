@@ -3,9 +3,8 @@
 # monorepo 部署仓库：后端源码在仓库根(pom 在根)，前端源码在 frontend/
 # 产物: 后端/前端 Docker 镜像，推送 GHCR (ghcr.io/<owner>/ruoyi-jdk25-*)
 #
-# 前置(私仓必须配):
-#   Settings -> Secrets and variables -> Actions -> New repository secret
-#   1. GHCR_TOKEN  (GitHub PAT, 勾选 write:packages)
+# 前置说明：登录 GHCR 用内置 GITHUB_TOKEN（自动提供，够 write:packages）
+# 无需额外配置 secret。若改推其他 registry(Docker Hub/ACR)，再在仓库加对应 secret。
 # ============================================================
 name: ruoyi-jdk25-build-push
 
@@ -36,7 +35,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build & push backend image
         uses: docker/build-push-action@v5
         with:
@@ -65,7 +64,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build & push frontend image
         uses: docker/build-push-action@v5
         with:
