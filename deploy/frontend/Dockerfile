@@ -19,8 +19,9 @@ COPY frontend/ ./
 RUN if [ -f .env.prod ]; then \
       sed -i "s|VITE_API_URL=.*|VITE_API_URL=${API_BASE_URL}|" .env.prod || true; \
     fi
-# 安装依赖：优先 frozen；lockfile 校验失败(版本差异)时退化为非 frozen 重新解析
-RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
+# 安装依赖：优先 frozen；lockfile 校验失败时退化为非 frozen 重新解析
+# --dangerously-allow-all-builds: 允许 esbuild/es5-ext 等 postinstall 脚本(已验证必需, 否则 ERR_PNPM_IGNORED_BUILDS)
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds || pnpm install --no-frozen-lockfile --dangerously-allow-all-builds
 # 构建生产产物; prod mode 下产物目录为 dist-prod (vite.config: outDir=VITE_OUT_DIR||'dist', .env.prod 设 VITE_OUT_DIR=dist-prod)
 RUN pnpm build:prod && echo "=== dist-prod ===" && ls dist-prod/ && ls dist/ 2>/dev/null
 
