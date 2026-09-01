@@ -55,9 +55,10 @@ services:
       MYSQL_DB: "ruoyi-vue-pro"
       MYSQL_USER: "root"
       MYSQL_PASSWORD: "123456"
-      # Redis 连接(复用宿主机 nanzi-redis, 通过 host-gateway 访问宿主)
-      REDIS_HOST: "host.docker.internal"
+      # Redis 连接(复用宿主机 nanzi-redis；用宿主内网IP直连, host-gateway在compose网络可能指错网段)
+      REDIS_HOST: "172.18.29.129"
       REDIS_PORT: "6379"
+      REDIS_PASSWORD: "nanzi_redis_2v9qX"
       # JVM 限堆，适配 2G 生产机
       JAVA_OPTS: "-Xms256m -Xmx768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
     extra_hosts:
