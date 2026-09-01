@@ -1,0 +1,109 @@
+# ============================================================
+# ruoyi-jdk25 生产机编排 (NanZi 生产机 8.138.163.232)
+# 服务: mysql + backend + frontend
+# Redis 复用宿主机现有 docker redis (6379)
+#
+# 运行:
+#   docker compose -f deploy/docker-compose.prod.yml up -d
+# 首次需先初始化数据库(见 init-db)
+# ============================================================
+version: "3.9"
+
+services:
+  # ---------- MySQL 8 ----------
+  mysql:
+    image: mysql:8.0
+    container_name: ruoyi-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: "ruoyi-vue-pro"
+      TZ: "Asia/Shanghai"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --lower_case_table_names=1
+      - --innodb_buffer_pool_size=128M     # 适配2G机器
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 初始化脚本挂载（首次启动自动执行 sql/mysql/*.sql）
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p123456"]
+      interval: 20s
+      timeout: 5s
+      retries: 10
+
+  # ---------- 后端 (Spring Boot, 端口 48080) ----------
+  backend:
+    image: ${BACKEND_IMAGE:-ghcr.io/your-registry/ruoyi-jdk25-backend:latest}
+    container_name: ruoyi-backend
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: "dev"
+      # MySQL 连接(指向 compose 内 mysql 服务)
+      MYSQL_HOST: "mysql"
+      MYSQL_PORT: "3306"
+      MYSQL_DB: "ruoyi-vue-pro"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "123456"
+      # Redis (复用宿主机现有 docker redis，7.2 兼容)
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      # JVM 限堆，适配 2G 生产机
+      JAVA_OPTS: "-Xms256m -Xmx768m -XX:+UseSerialGC -Dfile.encoding=UTF-8"
+    ports:
+      - "48080:48080"
+    deploy:
+      resources:
+        limits:
+          memory: 900M
+    # 探活
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:48080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ---------- 前端 (nginx) ----------
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/your-registry/ruoyi-jdk25-frontend:latest}
+    container_name: ruoyi-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8085:80"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ---------- Redis (复用宿主机 docker 即可；此处提供共享网络别名) ----------
+  redis:
+    image: redis:7-alpine
+    container_name: ruoyi-redis-shared
+    restart: always
+    command: ["redis-server", "--appendonly", "no", "--maxmemory", "128mb"]
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+
+volumes:
+  mysql-data:
+    driver: local
