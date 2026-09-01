@@ -25,8 +25,8 @@ RUN mvn -q clean install \
     -Dspotless.check.skip=true -Dmaven.javadoc.skip=true \
     -pl yudao-server -am && \
     echo "=== built jar ===" && ls -la yudao-server/target/*.jar && \
-    # 固定 jar 名（规避跨阶段 COPY 通配符不展开；fat jar 就是 repackage 后的那个）
-    cp yudao-server/target/yudao-server-*.jar /yudao-server.jar
+    # 固定 jar 名：真实产物名是 yudao-server.jar(finalName 无版本号, 不是 -*.jar)
+    cp yudao-server/target/yudao-server.jar /yudao-server.jar
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
