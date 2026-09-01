@@ -7,8 +7,9 @@
 FROM node:22-alpine AS builder
 WORKDIR /build
 ARG API_BASE_URL=/admin-api
-# 显式固定 pnpm@11，匹配 frontend/pnpm-lock.yaml 的 lockfileVersion
-RUN npm install -g pnpm@11
+# 固定 pnpm@11.8.0：与 frontend/pnpm-lock.yaml(lockfileVersion 9.0) 匹配
+#   用 pnpm@11 会装到 11.25，其 supply-chain 校验对 159 entries 报 TARBALL_URL_MISMATCH
+RUN npm install -g pnpm@11.8.0
 # 复制完整前端源码
 COPY frontend/ ./
 # 覆盖 API 前缀(前端用 VITE_API_URL=/admin-api，与 nginx 反代一致)

@@ -12,6 +12,8 @@ FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 # 复制启用模块的全部源码(reactor 需要相互 resolve)
 COPY pom.xml ./
+# 必须含 lombok.config（lombok.accessors.chain=true 依赖它）否则链式 setter 编译失败
+COPY lombok.config ./
 COPY yudao-dependencies ./yudao-dependencies
 COPY yudao-framework ./yudao-framework
 COPY yudao-module-system ./yudao-module-system
