@@ -1,22 +1,22 @@
 # ============================================================
 # yudao-ui-admin-vue3 前端 Docker 镜像
-# monorepo 构建上下文 = 仓库根用于 frontend/ 子目录
+# monorepo 构建上下文 = 仓库根；前端源码在 frontend/
 # CI: docker build -f deploy/frontend/Dockerfile   (context=仓库根)
-# 多阶段: pnpm 构建(前端源码在 frontend/) -> nginx
+# 多阶段: pnpm 构建 -> nginx
 # ============================================================
 FROM node:22-alpine AS builder
 WORKDIR /build
 ARG API_BASE_URL=/admin-api
-RUN corepack enable
-# monorepo: 前端源码在 frontend/
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-# 复制其余源码(frontend/pnpm-lock 已在)
+# 显式固定 pnpm@11，匹配 frontend/pnpm-lock.yaml 的 lockfileVersion
+RUN npm install -g pnpm@11
+# 复制完整前端源码
 COPY frontend/ ./
-# 覆盖 API 前缀
-RUN if [ -f .env.production ]; then \
-      sed -i "s|VITE_APP_BASE_API=.*|VITE_APP_BASE_API=${API_BASE_URL}|" .env.production || true; \
+# 覆盖 API 前缀(前端用 VITE_API_URL=/admin-api，与 nginx 反代一致)
+RUN if [ -f .env.prod ]; then \
+      sed -i "s|VITE_API_URL=.*|VITE_API_URL=${API_BASE_URL}|" .env.prod || true; \
     fi
+# 安装依赖：优先 frozen；lockfile 校验失败(版本差异)时退化为非 frozen 重新解析
+RUN pnpm install --frozen-lockfile || pnpm install --no-frozen-lockfile
 RUN pnpm build:prod && ls -la dist/
 
 # ---- 运行 ----

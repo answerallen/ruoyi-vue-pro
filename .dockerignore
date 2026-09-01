@@ -1,0 +1,9 @@
+# 通用 .dockerignore（前后端共用同一 context，不能排除任何源码目录）
+# 只排除明确无用的
+.git
+**/target/
+**/node_modules/
+**/dist/
+**/.idea/
+**/.vscode/
+*.log

@@ -1,25 +1,28 @@
 # ============================================================
 # ruoyi-vue-pro (master-jdk25) 后端 Docker 镜像
-# monorepo 构建上下文 = 仓库根(/) ；后端源码在 ./ 根(ruoyi-pom 在仓库根)
+# monorepo 构建上下文 = 仓库根；后端源码在仓库根(pom 在根)
 # CI: docker build -f deploy/backend/Dockerfile   (context=仓库根)
-# 多阶段: maven 构建 fat jar -> JRE 运行
+# 多阶段: maven reactor install -> JRE 运行
+#
+# 关键点：
+#   - 脚本依赖: 启用模块 = yudao-dependencies/framework/server/system/infra
+#   - 用 -pl yudao-server -am 一次 reactor install，自动带起依赖模块(install 到 .m2)
 # ============================================================
 FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
-# 整个仓库作为 context；后端使用根 pom (ruoyi 是单体, pom 在仓库根)
+# 复制启用模块的全部源码(reactor 需要相互 resolve)
 COPY pom.xml ./
-# 需要 yudao-dependencies 先 install
 COPY yudao-dependencies ./yudao-dependencies
 COPY yudao-framework ./yudao-framework
 COPY yudao-module-system ./yudao-module-system
 COPY yudao-module-infra ./yudao-module-infra
 COPY yudao-server ./yudao-server
-# 先安装 framework/dependencies 到本地仓库，再构建 server
-RUN mvn -q -N install -DskipTests
-RUN mvn -q -DskipTests -Dmaven.test.skip=true \
+# 一次 reactor install: 带起 yudao-dependencies/framework/system/infra 并产出 server fat jar
+RUN mvn -q clean install \
+    -DskipTests -Dmaven.test.skip=true \
     -Dspotless.check.skip=true -Dmaven.javadoc.skip=true \
-    -pl yudao-server -am package && \
-    ls -la yudao-server/target/*.jar
+    -pl yudao-server -am && \
+    echo "=== built jar ===" && ls -la yudao-server/target/*.jar
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app
