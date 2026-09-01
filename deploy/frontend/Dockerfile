@@ -10,6 +10,8 @@ ARG API_BASE_URL=/admin-api
 # 固定 pnpm@11.8.0：与 frontend/pnpm-lock.yaml(lockfileVersion 9.0) 匹配
 #   用 pnpm@11 会装到 11.25，其 supply-chain 校验对 159 entries 报 TARBALL_URL_MISMATCH
 RUN npm install -g pnpm@11.8.0
+# lockfile 的 tarball URL 指向 npmmirror，必须显式设 registry 否则 supply-chain 校验失败
+RUN pnpm config set registry https://registry.npmmirror.com
 # 复制完整前端源码
 COPY frontend/ ./
 # 覆盖 API 前缀(前端用 VITE_API_URL=/admin-api，与 nginx 反代一致)
