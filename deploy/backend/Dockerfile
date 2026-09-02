@@ -21,11 +21,11 @@ COPY yudao-module-infra ./yudao-module-infra
 COPY yudao-module-bpm ./yudao-module-bpm
 COPY yudao-module-ai ./yudao-module-ai
 COPY yudao-server ./yudao-server
-# 一次 reactor install: 带起 yudao-dependencies/framework/system/infra 并产出 server fat jar
+# 显式指定要 install 的模块(含 bpm/ai), -am 带起其依赖(framework/system/infra/dependencies)
 RUN mvn -q clean install \
     -DskipTests -Dmaven.test.skip=true \
     -Dspotless.check.skip=true -Dmaven.javadoc.skip=true \
-    -pl yudao-server -am && \
+    -pl yudao-module-bpm,yudao-module-ai,yudao-server -am && \
     echo "=== built jar ===" && ls -la yudao-server/target/*.jar && \
     # 固定 jar 名：真实产物名是 yudao-server.jar(finalName 无版本号, 不是 -*.jar)
     cp yudao-server/target/yudao-server.jar /yudao-server.jar
