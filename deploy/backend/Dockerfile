@@ -18,6 +18,8 @@ COPY yudao-dependencies ./yudao-dependencies
 COPY yudao-framework ./yudao-framework
 COPY yudao-module-system ./yudao-module-system
 COPY yudao-module-infra ./yudao-module-infra
+COPY yudao-module-bpm ./yudao-module-bpm
+COPY yudao-module-ai ./yudao-module-ai
 COPY yudao-server ./yudao-server
 # 一次 reactor install: 带起 yudao-dependencies/framework/system/infra 并产出 server fat jar
 RUN mvn -q clean install \
